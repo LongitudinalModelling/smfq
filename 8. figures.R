@@ -100,7 +100,7 @@ for (params in plot_params) {
   lines(params$data$age, params$data$fpca_mean, col = "skyblue", lwd = 2.5, lty = 1)
   lines(params$data$age, params$data$lme_mean, col = "salmon", lwd = 2.5, lty = 6)
   
-  legend("bottomright", legend = c("FPCA", "LME"), col = c("skyblue", "salmon"),
+  legend("bottomright", legend = c("FPCA", "PLME"), col = c("skyblue", "salmon"),
          lty = c(1, 6), lwd = 2, bty = "n", cex = 0.9)
 
 }
@@ -108,9 +108,9 @@ for (params in plot_params) {
 # --- PANELS C, D, E, F: Individual Trajectories ---
 plot_params <- list(
   list(data = face_pred_M, title = '(C) FPCA: all males', y_label = 'Symptoms score', ylim = c(0, 26)),
-  list(data = psme_pred_M, title = '(D) LME: all males', y_label = 'Symptoms score', ylim = c(0, 26)),
+  list(data = psme_pred_M, title = '(D) PLME: all males', y_label = 'Symptoms score', ylim = c(0, 26)),
   list(data = face_pred_F, title = '(E) FPCA: all females', y_label = 'Symptoms score', ylim = c(0, 26)),
-  list(data = psme_pred_F, title = '(F) LME: all females', y_label = 'Symptoms score', ylim = c(0, 26))
+  list(data = psme_pred_F, title = '(F) PLME: all females', y_label = 'Symptoms score', ylim = c(0, 26))
 )
 
 for (params in plot_params) {
@@ -210,11 +210,11 @@ grDevices::cairo_pdf("res/Figure_2.pdf", height = 4.5, width = 9)
 
 ggplot(obs_pred_MF, aes(x = age)) + theme_classic() + geom_line(
     aes(y = LME_dep, color = "PLME"), linewidth = 1, linetype = 6) + geom_line(
-      aes(y = FPCA_dep, color = "PFPCA"),  linewidth = 1) + geom_point(
+      aes(y = FPCA_dep, color = "FPCA"),  linewidth = 1) + geom_point(
         aes(y = dep, color = "Observed"), size = 1) + scale_y_continuous(
         labels = number_format(accuracy = 1)) + scale_color_manual(
-          values = c("Observed" = "black", "PLME" = "salmon", "PFPCA" = "skyblue"), 
-          breaks = c("Observed", "PFPCA", "PLME")) + labs(
+          values = c("Observed" = "black", "PLME" = "salmon", "FPCA" = "skyblue"), 
+          breaks = c("Observed", "FPCA", "PLME")) + labs(
             x = "Age, y", y = "Symptoms score", color = "Legend") + facet_wrap(
               . ~ sex, scales = "fixed", strip.position = "top", ncol = 4) +
   theme(legend.position = "bottom", legend.title = element_blank(),
@@ -264,7 +264,7 @@ compute_mean_velocity <- function(df, var) {
     group_by(age, sex) %>% summarize(mean_vel = mean(velocity), .groups = "drop")
 }
 
-lme_mvel <- compute_mean_velocity(means_MF, "lme_mean") %>% mutate(method = "LME")
+lme_mvel <- compute_mean_velocity(means_MF, "lme_mean") %>% mutate(method = "PLME")
 face_mvel <- compute_mean_velocity(means_MF, "fpca_mean") %>% mutate(method = "FPCA")
 
 meanvel <- bind_rows(lme_mvel, face_mvel)
@@ -330,21 +330,21 @@ for (params in plot_params) {
   axis(1); axis(2, las = 1); box(bty = "l")
   
   fpca_data <- params$data[params$data$method == "FPCA", ]
-  lme_data  <- params$data[params$data$method == "LME", ]
+  lme_data  <- params$data[params$data$method == "PLME", ]
   
   lines(fpca_data$age, fpca_data$mean_vel, col = "skyblue", lwd = 2.5, lty = 1)
   lines(lme_data$age,  lme_data$mean_vel,  col = "salmon",  lwd = 2.5, lty = 6)
   
-  legend("bottomright", legend = c("FPCA", "LME"), col = c("skyblue", "salmon"),
+  legend("bottomright", legend = c("FPCA", "PLME"), col = c("skyblue", "salmon"),
          lty = c(1, 6), lwd = 2, bty = "n", cex = 0.9)
 }
 
 # --- PANELS C, D, E, F: Individual velocity ---
 plot_params <- list(
   list(data = face_vel_M, title = '(C) FPCA: all males', y_label = 'Velocity, score / y', ylim = c(-5, 6.5)),
-  list(data = lme_vel_M, title = '(D) LME: all males', y_label = 'Velocity, score / y', ylim = c(-5, 6.5)),
+  list(data = lme_vel_M, title = '(D) PLME: all males', y_label = 'Velocity, score / y', ylim = c(-5, 6.5)),
   list(data = face_vel_F, title = '(E) FPCA: all females', y_label = 'Velocity, score / y', ylim = c(-5, 6.5)),
-  list(data = lme_vel_F, title = '(F) LME: all females', y_label = 'Velocity, score / y', ylim = c(-5, 6.5))
+  list(data = lme_vel_F, title = '(F) PLME: all females', y_label = 'Velocity, score / y', ylim = c(-5, 6.5))
 )
 
 for (params in plot_params) {
@@ -375,9 +375,7 @@ rm(list = ls())
 #### PLOT RESIDUALS AGAINST AGE  ####
 #----====---------------------------#
 
-#-------------------#
-#### RESID: FPCA ####
-#-------------------#
+#### FPCA
 
 load("dep_face_mods.RData")
 
@@ -401,9 +399,7 @@ face_resid_F <- face_resid_F %>% rename(id = subj, agey = argvals) %>%
     resid = dep - pred_dep) %>% ungroup() %>% filter(
       agey >= 10 & agey <= 26)
 
-#------------------#
-#### RESID: LME ####
-#------------------#
+#### RESID: LME
 
 xTraj <- function(model, new.x) {
   pop <- model$pcoef[[1]] + psme:::EvalSmooth(model$smooth[[1]], new.x)
@@ -466,13 +462,13 @@ with(face_resid_M, plot(agey, resid, ylim = c(-14, 19), xlab = 'Age, y', ylab = 
 title('(A) FPCA: males', adj = 0)
 
 with(psme_resid_M, plot(agey, resid, ylim = c(-14, 19), xlab = 'Age, y', ylab = 'residual', cex = 0.3))
-title('(B) LME: males', adj = 0)
+title('(B) PLME: males', adj = 0)
 
 with(face_resid_F, plot(agey, resid, ylim = c(-14, 19), xlab = 'Age, y', ylab = 'residual', cex = 0.3))
 title('(C) FPCA: females', adj = 0)
 
 with(psme_resid_F, plot(agey, resid, ylim = c(-14, 19), xlab = 'Age, y', ylab = 'residual', cex = 0.3))
-title('(D) LME: females', adj = 0)
+title('(D) PLME: females', adj = 0)
 
 dev.off()
 
@@ -503,7 +499,7 @@ est_MF_long$variable <- dplyr::recode(
 
 est_MF_long$method <- dplyr::recode(
   est_MF_long$method, 
-  "psme" = "LME",
+  "psme" = "PLME",
   "face" = "FPCA"
 )
 
@@ -514,7 +510,7 @@ est_MF_summ <- est_MF_long %>%
     SD = ~sd(.,na.rm=T))) 
 
 est_MF_summ$sex <- factor(est_MF_summ$sex, levels = c("Females", "Males"))
-est_MF_summ$method <- factor(est_MF_summ$method, levels = c("LME", "FPCA"))
+est_MF_summ$method <- factor(est_MF_summ$method, levels = c("PLME", "FPCA"))
 
 (P1 <- est_MF_summ %>% filter(variable == "(A) Peak symptoms score") %>% ggplot() + 
     geom_point(data = est_MF_long[est_MF_long$variable == "(A) Peak symptoms score",],
@@ -523,7 +519,7 @@ est_MF_summ$method <- factor(est_MF_summ$method, levels = c("LME", "FPCA"))
                  position = position_dodge(width = 0.5), size = 1, aes(
                    x = sex, y = mean, ymin = mean - SD, ymax = mean + SD, col = method,
                    group = method)) + coord_flip() + scale_color_manual(
-                     values = c("LME" = "salmon", "FPCA" = "skyblue")) +
+                     values = c("PLME" = "salmon", "FPCA" = "skyblue")) +
     ggtitle("(A) Peak symptoms")+ ylab("Score") +
     theme(axis.title.y = element_blank(), legend.title = element_blank(), 
   plot.title = element_text(face="bold", size = 10)) +
@@ -536,7 +532,7 @@ est_MF_summ$method <- factor(est_MF_summ$method, levels = c("LME", "FPCA"))
                  position = position_dodge(width = 0.5), size = 1, aes(
                    x = sex, y = mean, ymin = mean - SD, ymax = mean + SD, col = method,
                    group = method)) + coord_flip() + scale_color_manual(
-                     values = c("LME" = "salmon", "FPCA" = "skyblue")) +
+                     values = c("PLME" = "salmon", "FPCA" = "skyblue")) +
     ggtitle("(B) Age at peak symptoms")+ ylab("Age, y") +
     theme(axis.title.y = element_blank(), legend.title = element_blank(),
        plot.title = element_text(face="bold", size = 10)) +
@@ -549,8 +545,8 @@ est_MF_summ$method <- factor(est_MF_summ$method, levels = c("LME", "FPCA"))
                  position = position_dodge(width = 0.5), size = 1, aes(
                    x = sex, y = mean, ymin = mean - SD, ymax = mean + SD, col = method,
                    group = method)) + coord_flip() + scale_color_manual(
-                     values = c("LME" = "salmon", "FPCA" = "skyblue")) +
-    ggtitle("(C) Peak symptoms velocity")+ ylab("Velocity, score / y") +
+                     values = c("PLME" = "salmon", "FPCA" = "skyblue")) +
+    ggtitle("(C) Peak velocity")+ ylab("Velocity, score / y") +
     theme(axis.title.y = element_blank(), legend.title = element_blank(), 
           plot.title = element_text(face="bold", size = 10)) +
     guides(col = guide_legend(override.aes = list(size = 0.8), reverse = T)))
@@ -562,7 +558,7 @@ est_MF_summ$method <- factor(est_MF_summ$method, levels = c("LME", "FPCA"))
                  position = position_dodge(width = 0.5), size = 1, aes(
                    x = sex, y = mean, ymin = mean - SD, ymax = mean + SD, col = method,
                    group = method)) + coord_flip() + scale_color_manual(
-                     values = c("LME" = "salmon", "FPCA" = "skyblue")) +
+                     values = c("PLME" = "salmon", "FPCA" = "skyblue")) +
     scale_y_continuous(breaks = c(12, 14, 16, 18)) + 
     ggtitle("(D) Age at peak velocity")+ ylab("Age, y") +
     theme(axis.title.y = element_blank(), legend.title = element_blank(),
