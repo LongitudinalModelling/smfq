@@ -1,6 +1,6 @@
 # Depressive symptoms trajectories
 
-**Paper**: 
+**Paper** Hernandez MA, Kwong ASF, Li C, Simpkin AJ, Wootton RE, Joinson C, Elhakeem A. Estimating severity and rate of change of depressive symptoms in adolescence: a comparison of functional principal component analysis and mixed effects models. medRxiv 2026.04.09.26350500; doi: https://doi.org/10.64898/2026.04.09.26350500
 
 This page contains the R analysis code from the above paper. The files are described below:
 
